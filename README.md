@@ -13,6 +13,6 @@ Application to fetch and display price chart for BTC and ETH
 ### Start backend
 `flask run`
 ### Start UI
-Open `index.html` in a browser...
-Voila!
-It might take some time to load data if the time range is long.<br>By default it loads up data for the last 1 year.
+Open `index.html` in a browser...<br>
+Voila!<br>
+It might take some time to load data if the time range is long. By default it loads up data for the last 1 year.
