@@ -6,7 +6,7 @@ Application to fetch and display price chart for BTC and ETH
 
 ## Getting Started
 ### Create a virtual environment
-`python -m venv venv`
+`python -m venv venv`<br>
 `venv\scripts\activate`
 ### Install dependencies
 `pip install -r requirements.txt`
@@ -15,4 +15,4 @@ Application to fetch and display price chart for BTC and ETH
 ### Start UI
 Open `index.html` in a browser...
 Voila!
-It might take some time to load data if the time range is long. By default it loads up data for the last 1 year.
+It might take some time to load data if the time range is long.<br>By default it loads up data for the last 1 year.
