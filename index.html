@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        Price Chart
+    </title>
+</head>
+<body>
+    <!-- Buttons on top -->
+    <div class="btn-group d-flex justify-content-center" data-toggle="buttons">
+        <label class="btn btn-primary">
+            <input type="radio" name="options" id="option1" autocomplete="off" onclick="handle_buttons('')">ALL
+        </label>
+        <label class="btn btn-primary">
+            <input type="radio" name="options" id="option2" autocomplete="off" checked onclick="handle_buttons('1Y')">1Y
+        </label>
+        <label class="btn btn-primary">
+            <input type="radio" name="options" id="option3" autocomplete="off" onclick="handle_buttons('1M')">1M
+        </label>
+        <label class="btn btn-primary">
+            <input type="radio" name="options" id="option3" autocomplete="off" onclick="handle_buttons('1W')">1W
+        </label>
+        <label class="btn btn-primary">
+            <input type="radio" name="options" id="option3" autocomplete="off" onclick="handle_buttons('1D')">1D
+        </label>
+        <label class="btn btn-primary">
+            <input type="radio" name="options" id="option3" autocomplete="off" onclick="handle_buttons('1H')">1H
+        </label>
+    </div>
+    <!-- Datepickers -->
+    <div>
+        <label for="date-from">From:</label>
+        <input type="date" id="date-from" name="date-from" />
+        <label for="date-to">To:</label>
+        <input type="date" id="date-to" name="date-to" />
+        <input type="submit" id="submit" value="submit" onclick="handle_custom_date()" />
+    </div>
+    <!-- Chart canvas element -->
+    <canvas id="myChart"></canvas>
+    <!-- Loading dependencies -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js"></script>
+    <!-- Start here -->
+    <script>
+        const labels = []
+        const btc_data = []
+        const eth_data = []
+        const data_coins = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'BTC',
+                    data: btc_data,
+                    borderColor: '#00FF00',
+                },
+                {
+                    label: 'ETH',
+                    data: eth_data,
+                    borderColor: '#0000FF',
+                }
+            ]
+        };
+        const config = {
+            type: 'line',
+            data: data_coins,
+            options: {
+                responsive: true,
+                scales: {
+                    xAxis: {
+                        ticks: {
+                            maxTicksLimit: 10,
+                            maxRotation: 0,
+                            minRotation: 0
+                        }
+                    }
+                },
+                elements: {
+                    points:{
+                        radius: 1
+                    },
+                    line: {
+                        fill: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Price Chart'
+                    },
+                    zoom: {
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'xy',
+                        }
+                    }
+                }
+            },
+        };
+        const ctx = document.getElementById("myChart").getContext('2d');
+        const chart_object = new Chart(ctx, config)
+        function load_chart(date_from, date_to) {
+            // Fetched data for both BTC and ETH for the given time period and fills datasets of chart object
+            date_to = Math.floor(date_to)
+            date_from = Math.floor(date_from)
+            fetch(`http://127.0.0.1:5000/data/${date_from}/${date_to}`)
+                .then(response => response.json())
+                .then((data) => {
+                    const temp_labels = []
+                    const temp_btc_data = []
+                    data['btc'].forEach(element => {
+                        const label_date = new Date(Number(element['time']) * 1000)
+                        const label_string = label_date.toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false, minute: '2-digit', second: '2-digit' })
+                        temp_labels.push(label_string)
+                        temp_btc_data.push(element['close'])
+                    });
+                    const temp_eth_data = []
+                    data['eth'].forEach(element => {
+                        temp_eth_data.push(element['close'])
+                    });
+                    var data_ref = chart_object.config.data;
+                    data_ref.datasets[0].data = temp_btc_data;
+                    data_ref.datasets[1].data = temp_eth_data;
+                    data_ref.labels = temp_labels;
+                    chart_object.update();
+                })
+        }
+        function handle_buttons(time_period) {
+            // Handler for buttons on top
+            const to = new Date()
+            const from = new Date()
+            if (time_period == '') {
+                from.setDate(from.getDate() - 730)
+            }
+            else if (time_period == '1Y') {
+                from.setDate(from.getDate() - 365)
+            }
+            else if (time_period == '1M') {
+                from.setDate(from.getDate() - 30)
+            }
+            else if (time_period == '1W') {
+                from.setDate(from.getDate() - 7)
+            }
+            else if (time_period == '1D') {
+                from.setDate(from.getDate() - 1)
+            }
+            else if (time_period == '1H') {
+                from.setHours(from.getHours() - 1)
+            }
+            load_chart(from.getTime() / 1000, to.getTime() / 1000)
+        }
+        function handle_custom_date() {
+            // Handler for datepickers
+            const from = new Date($('#date-from').val());
+            const to = new Date($('#date-to').val());
+            load_chart(from.getTime() / 1000, to.getTime() / 1000)
+        }
+        // By default load last 1 years data
+        handle_buttons('1Y')
+    </script>
+</body>
+</html>
